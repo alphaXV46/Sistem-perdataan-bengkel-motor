@@ -1,0 +1,215 @@
+D:\laragon\www
+λ mysql -u root -p
+Enter password:
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 8
+Server version: 8.4.3 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2024, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> create database db_bengkel_motor;
+Query OK, 1 row affected (0.01 sec)
+
+mysql> use db_bengkel_motor;
+Database changed
+mysql> create table pelanggan (
+    -> id_pelanggan int primary key auto_increment,
+    -> nama_pelanggan varchar(100),
+    -> alamat text);
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> create table motor (
+    -> id_motor int primary key auto_increment,
+    -> plat_nomor varchar(15) unique,
+    -> merk varchar(50),
+    -> id_pelanggan int,
+    -> foreign key (id_pelanggan) references pelanggan(id_pelanggan));
+Query OK, 0 rows affected (0.05 sec)
+
+mysql> create table servis (
+    -> id_servis int primary key auto_increment,
+    -> id_motor int,
+    -> tanggal_servis date,
+    -> keluhan text,
+    -> biaya decimal(10,2),
+    -> foreign key (id_motor) references motor(id_motor));
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> alter table servis
+    -> add column status_pembayaran varchar(20) default 'belum lunas';
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> insert into pelanggan (nama_pelanggan, no_telp, alamat) values
+    -> ('andi setiawan', '0811', 'jakarta'),
+    -> ('budi santoso', '0822', 'bandung'),
+    -> ('citra lestari', '0833', 'surabaya'),
+    -> ('dewi puspa', '0844', 'malang'),
+    -> ('geraldy', '0855', 'semarang'),
+    -> ('novi', '0866', 'medan');
+ERROR 1054 (42S22): Unknown column 'no_telp' in 'field list'
+mysql> alter table pelanggan
+    -> add column no_telp varchar (15);
+Query OK, 0 rows affected (0.01 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> insert into pelanggan (nama_pelanggan, no_telp, alamat) values
+    -> ('andi setiawan', '0811', 'jakarta'),
+    -> ('geraldy', '0822', 'bandung'),
+    -> ('novi', '0833', 'surabaya'),
+    -> ('dewi puspa', '0844', 'malang'),
+    -> ('opang', '0855', 'semarang'),
+    -> ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 6
+mysql> insert into pelanggan (nama_pelanggan, no_telp, alamat) values
+    -> ('andi setiawan', '0811', 'jakarta'),
+    -> ('geraldy', '0822', 'bandung'),
+    -> ('novi', '0833', 'surabaya'),
+    -> ('dewi puspa', '0844', 'malang'),
+    -> ('opang', '0855', 'semarang');
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> insert into motor (plat_nomor, merk, id_pelanggan) values
+    -> ('b 1234 aaa', 'honda', 1),
+    -> ('d 5678 bbb', 'yamaha', 2),
+    -> ('l 9012 ccc', 'suzuki', 3),
+    -> ('n 3456 ddd', 'kawasaki', 4),
+    -> ('h 7890 eee', 'honda', 5),
+    -> ('bk 111 fff', 'yamaha', null);
+Query OK, 6 rows affected (0.01 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+mysql> alter table pelanggan
+    -> ;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> insert into pelanggan (nama_pelanggan, no_telp, alamat)
+    -> ('fajar sidik', '0866', 'medan');
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ''fajar sidik', '0866', 'medan')' at line 2
+mysql> insert into pelanggan (nama_pelanggan, no_telp, alamat) values
+    -> ('fajar sidik', '0866', 'medan');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into servis (id_motor, tanggal_servis, keluhan, biaya) values
+    -> (1, '2026-02-01', 'ganti oli', 150000),
+    -> (2, '2026-02-02', 'servis rem', 200000),
+    -> (3, '2026-02-03', 'ganti ban', 450000),
+    -> (4, '2026-02-04', 'turun mesin', 1500000),
+    -> (5, '2026-02-05', 'servis rutin', 250000);
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> update servis set status_pembayaran = 'lunas' where id_servis in (1, 2, 3, 5);
+Query OK, 4 rows affected (0.01 sec)
+Rows matched: 4  Changed: 4  Warnings: 0
+
+mysql> select p.nama_pelanggan, m.plat_nomor, s.keluhan, s.biaya
+    -> from servis s
+    -> inner join motor m on s.id_motor = m.id_motor
+    -> inner join pelanggan p on m.id_pelanggan = p.id_pelanggan;
++----------------+------------+--------------+------------+
+| nama_pelanggan | plat_nomor | keluhan      | biaya      |
++----------------+------------+--------------+------------+
+| andi setiawan  | b 1234 aaa | ganti oli    |  150000.00 |
+| geraldy        | d 5678 bbb | servis rem   |  200000.00 |
+| novi           | l 9012 ccc | ganti ban    |  450000.00 |
+| dewi puspa     | n 3456 ddd | turun mesin  | 1500000.00 |
+| opang          | h 7890 eee | servis rutin |  250000.00 |
++----------------+------------+--------------+------------+
+5 rows in set (0.00 sec)
+
+mysql> select p.nama_pelanggan, m.plat_nomor
+    -> from pelanggan p
+    -> left join motor m on p.id_pelanggan = m.id_pelanggan;
++----------------+------------+
+| nama_pelanggan | plat_nomor |
++----------------+------------+
+| andi setiawan  | b 1234 aaa |
+| geraldy        | d 5678 bbb |
+| novi           | l 9012 ccc |
+| dewi puspa     | n 3456 ddd |
+| opang          | h 7890 eee |
+| fajar sidik    | NULL       |
++----------------+------------+
+6 rows in set (0.00 sec)
+
+mysql> select p.nama_pelanggan, m.plat_nomor
+    -> from pelanggan p
+    -> right join motor m on p.id_pelanggan = m.id_pelanggan;
++----------------+------------+
+| nama_pelanggan | plat_nomor |
++----------------+------------+
+| andi setiawan  | b 1234 aaa |
+| geraldy        | d 5678 bbb |
+| novi           | l 9012 ccc |
+| dewi puspa     | n 3456 ddd |
+| opang          | h 7890 eee |
+| NULL           | bk 111 fff |
++----------------+------------+
+6 rows in set (0.00 sec)
+
+mysql> select p.nama_pelanggan, m.plat_nomor from pelanggan p left join motor m on p.id_pelanggan = m.id_pelanggan
+    -> union
+    -> select p.nama_pelanggan, m.plat_nomor from pelanggan p right join motor m on p.id_pelanggan = m.id_pelanggan;
++----------------+------------+
+| nama_pelanggan | plat_nomor |
++----------------+------------+
+| andi setiawan  | b 1234 aaa |
+| geraldy        | d 5678 bbb |
+| novi           | l 9012 ccc |
+| dewi puspa     | n 3456 ddd |
+| opang          | h 7890 eee |
+| fajar sidik    | NULL       |
+| NULL           | bk 111 fff |
++----------------+------------+
+7 rows in set (0.01 sec)
+
+mysql> select count(*) as total_honda from motor where merk = 'honda';
++-------------+
+| total_honda |
++-------------+
+|           2 |
++-------------+
+1 row in set (0.01 sec)
+
+mysql> select * from servis
+    -> where keluhan = 'ganti oli' or biaya > 1000000
+    -> order by biaya desc
+    -> limit 2;
++-----------+----------+----------------+-------------+------------+-------------------+
+| id_servis | id_motor | tanggal_servis | keluhan     | biaya      | status_pembayaran |
++-----------+----------+----------------+-------------+------------+-------------------+
+|         4 |        4 | 2026-02-04     | turun mesin | 1500000.00 | belum lunas       |
+|         1 |        1 | 2026-02-01     | ganti oli   |  150000.00 | lunas             |
++-----------+----------+----------------+-------------+------------+-------------------+
+2 rows in set (0.00 sec)
+
+mysql> create view laporan_pendapatan as
+    -> select
+    -> tanggal_servis,
+    -> keluhan,
+    -> biaya,
+    -> status_pembayaran
+    -> from servis;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from laporan_pendapatan;
++----------------+--------------+------------+-------------------+
+| tanggal_servis | keluhan      | biaya      | status_pembayaran |
++----------------+--------------+------------+-------------------+
+| 2026-02-01     | ganti oli    |  150000.00 | lunas             |
+| 2026-02-02     | servis rem   |  200000.00 | lunas             |
+| 2026-02-03     | ganti ban    |  450000.00 | lunas             |
+| 2026-02-04     | turun mesin  | 1500000.00 | belum lunas       |
+| 2026-02-05     | servis rutin |  250000.00 | lunas             |
++----------------+--------------+------------+-------------------+
+5 rows in set (0.00 sec)
+
+mysql>
