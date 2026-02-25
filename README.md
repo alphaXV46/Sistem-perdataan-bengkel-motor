@@ -1,213 +1,318 @@
-----------
+# 🏍️ Sistem Database Bengkel Motor (MySQL)
 
-# 🛵 dokumentasi project: database sistem bengkel motor
+Dokumentasi ini menjelaskan pembuatan dan pengelolaan database **Bengkel Motor** menggunakan **MySQL 8.4.3** secara terstruktur dan siap digunakan sebagai `README.md`.
 
-project ini dirancang untuk mengelola operasional bengkel motor secara digital. dokumentasi ini mencakup seluruh perintah sql yang diperlukan dari tahap perancangan hingga pelaporan.
+---
 
-----------
+## 📦 1. Membuat Database
 
-## 🏗️ 1. data definition language (ddl)
-
-tahap ini bertujuan untuk membangun struktur database dan tabel.
-
-SQL
-
+```sql
+CREATE DATABASE db_bengkel_motor;
+USE db_bengkel_motor;
 ```
--- 1. membuat database
-create database db_bengkel_pro;
-use db_bengkel_pro;
 
--- 2. membuat tabel pelanggan (master data)
-create table pelanggan (
-    id_pelanggan int primary key auto_increment,
-    nama_pelanggan varchar(100) not null,
-    no_telp varchar(15),
-    alamat text
+📌 Database ini digunakan untuk menyimpan data:
+
+* Pelanggan
+* Motor
+* Servis
+
+---
+
+# 🗂️ 2. Struktur Tabel
+
+---
+
+## 👤 Tabel `pelanggan`
+
+```sql
+CREATE TABLE pelanggan (
+    id_pelanggan INT PRIMARY KEY AUTO_INCREMENT,
+    nama_pelanggan VARCHAR(100),
+    alamat TEXT
 );
+```
 
--- 3. membuat tabel motor (relasi ke pelanggan)
-create table motor (
-    id_motor int primary key auto_increment,
-    plat_nomor varchar(15) unique not null,
-    merk varchar(50),
-    tipe varchar(50),
-    id_pelanggan int,
-    foreign key (id_pelanggan) references pelanggan(id_pelanggan)
+### ➕ Penambahan Kolom
+
+```sql
+ALTER TABLE pelanggan
+ADD COLUMN no_telp VARCHAR(15);
+```
+
+### 📊 Struktur Akhir
+
+| Field          | Tipe Data    | Keterangan              |
+| -------------- | ------------ | ----------------------- |
+| id_pelanggan   | INT (PK, AI) | ID unik pelanggan       |
+| nama_pelanggan | VARCHAR(100) | Nama pelanggan          |
+| alamat         | TEXT         | Alamat pelanggan        |
+| no_telp        | VARCHAR(15)  | Nomor telepon pelanggan |
+
+---
+
+## 🏍️ Tabel `motor`
+
+```sql
+CREATE TABLE motor (
+    id_motor INT PRIMARY KEY AUTO_INCREMENT,
+    plat_nomor VARCHAR(15) UNIQUE,
+    merk VARCHAR(50),
+    id_pelanggan INT,
+    FOREIGN KEY (id_pelanggan) REFERENCES pelanggan(id_pelanggan)
 );
+```
 
--- 4. membuat tabel servis (relasi ke motor)
-create table servis (
-    id_servis int primary key auto_increment,
-    id_motor int,
-    tanggal_servis date,
-    keluhan text,
-    biaya decimal(10,2),
-    foreign key (id_motor) references motor(id_motor)
+### 📊 Struktur Tabel
+
+| Field        | Tipe Data    | Keterangan          |
+| ------------ | ------------ | ------------------- |
+| id_motor     | INT (PK, AI) | ID motor            |
+| plat_nomor   | VARCHAR(15)  | Plat nomor (unik)   |
+| merk         | VARCHAR(50)  | Merk motor          |
+| id_pelanggan | INT (FK)     | Relasi ke pelanggan |
+
+---
+
+## 🔧 Tabel `servis`
+
+```sql
+CREATE TABLE servis (
+    id_servis INT PRIMARY KEY AUTO_INCREMENT,
+    id_motor INT,
+    tanggal_servis DATE,
+    keluhan TEXT,
+    biaya DECIMAL(10,2),
+    FOREIGN KEY (id_motor) REFERENCES motor(id_motor)
 );
-
--- 5. alter: memodifikasi tabel untuk menambah kolom status
-alter table servis add column status_pembayaran varchar(20) default 'belum lunas';
-
 ```
 
-> **penjelasan**: tabel dibuat berurutan dari pelanggan ke servis agar **foreign key** (kunci penghubung) bisa merujuk ke tabel induk yang sudah ada.
+### ➕ Tambah Kolom Status Pembayaran
 
-----------
-
-## 📥 2. data manipulation language (dml)
-
-tahap pengisian data minimal 5 baris dan pembaruan data.
-
-SQL
-
-```
--- mengisi data pelanggan
-insert into pelanggan (nama_pelanggan, no_telp, alamat) values
-('andi setiawan', '081122', 'jakarta'),
-('geraldy', '082233', 'bandung'),
-('novi', '083344', 'surabaya'),
-('dewi puspa', '084455', 'malang'),
-('opang', '085566', 'semarang'),
-('fajar sidik', '086677', 'medan'); -- pelanggan ke-6 untuk tes join
-
--- mengisi data motor (id_pelanggan merujuk ke tabel pelanggan)
-insert into motor (plat_nomor, merk, tipe, id_pelanggan) values
-('b 1234 aaa', 'honda', 'vario', 1),
-('d 5678 bbb', 'yamaha', 'nmax', 2),
-('l 9012 ccc', 'suzuki', 'gsx', 3),
-('n 3456 ddd', 'kawasaki', 'ninja', 4),
-('h 7890 eee', 'honda', 'beat', 5),
-('bk 111 fff', 'yamaha', 'mio', null); -- motor tanpa pemilik untuk tes join
-
--- mengisi data servis
-insert into servis (id_motor, tanggal_servis, keluhan, biaya) values
-(1, '2026-02-10', 'ganti oli', 150000),
-(2, '2026-02-11', 'servis rem', 75000),
-(3, '2026-02-12', 'ganti ban', 450000),
-(4, '2026-02-13', 'turun mesin', 1200000),
-(5, '2026-02-14', 'servis rutin', 200000);
-
--- update: mengubah data yang sudah ada
-update servis set status_pembayaran = 'lunas' where id_servis = 1;
-update pelanggan set alamat = 'bandung kota' where nama_pelanggan = 'geraldy';
-
+```sql
+ALTER TABLE servis
+ADD COLUMN status_pembayaran VARCHAR(20) DEFAULT 'belum lunas';
 ```
 
-----------
+### 📊 Struktur Tabel
 
-## 🔍 3. analisis data & join
+| Field             | Tipe Data     | Keterangan                    |
+| ----------------- | ------------- | ----------------------------- |
+| id_servis         | INT (PK, AI)  | ID servis                     |
+| id_motor          | INT (FK)      | Relasi ke motor               |
+| tanggal_servis    | DATE          | Tanggal servis                |
+| keluhan           | TEXT          | Keluhan pelanggan             |
+| biaya             | DECIMAL(10,2) | Biaya servis                  |
+| status_pembayaran | VARCHAR(20)   | Status (default: belum lunas) |
 
-menghubungkan tabel-tabel untuk menghasilkan informasi yang berguna.
+---
 
-### a. kueri gabungan (tanpa alias)
+# 📝 3. Insert Data
 
-SQL
+## 👤 Data Pelanggan
 
-```
--- laporan lengkap pelanggan, motor, dan keluhan servisnya
-select 
-    pelanggan.nama_pelanggan, 
-    motor.plat_nomor, 
-    servis.tanggal_servis, 
-    servis.keluhan, 
-    servis.biaya
-from pelanggan
-join motor on pelanggan.id_pelanggan = motor.id_pelanggan
-join servis on motor.id_motor = servis.id_motor;
-
-```
-
-### b. variasi join
-
--   **left join**: melihat semua pelanggan, termasuk yang belum punya motor.
-    
-    SQL
-    
-    ```
-    select pelanggan.nama_pelanggan, motor.plat_nomor 
-    from pelanggan 
-    left join motor on pelanggan.id_pelanggan = motor.id_pelanggan;
-    
-    ```
-    
--   **right join**: melihat semua motor, termasuk yang data pemiliknya belum terdaftar.
-    
-    SQL
-    
-    ```
-    select pelanggan.nama_pelanggan, motor.plat_nomor 
-    from pelanggan 
-    right join motor on pelanggan.id_pelanggan = motor.id_pelanggan;
-    
-    ```
-    
--   **full join (simulasi)**: menampilkan seluruh data dari kedua sisi.
-    
-    SQL
-    
-    ```
-    select pelanggan.nama_pelanggan, motor.plat_nomor from pelanggan left join motor on pelanggan.id_pelanggan = motor.id_pelanggan
-    union
-    select pelanggan.nama_pelanggan, motor.plat_nomor from pelanggan right join motor on pelanggan.id_pelanggan = motor.id_pelanggan;
-    
-    ```
-    
-
-----------
-
-## 📈 4. fungsi agregasi & filter
-
-SQL
-
-```
--- count: menghitung total transaksi servis
-select count(*) as total_transaksi from servis;
-
--- or: mencari motor merk honda atau suzuki
-select * from motor where merk = 'honda' or merk = 'suzuki';
-
--- limit: menampilkan 3 transaksi servis dengan biaya tertinggi
-select * from servis order by biaya desc limit 3;
-
+```sql
+INSERT INTO pelanggan (nama_pelanggan, no_telp, alamat) VALUES
+('andi setiawan', '0811', 'jakarta'),
+('geraldy', '0822', 'bandung'),
+('novi', '0833', 'surabaya'),
+('dewi puspa', '0844', 'malang'),
+('opang', '0855', 'semarang'),
+('fajar sidik', '0866', 'medan');
 ```
 
-----------
+---
 
-## 🖼️ 5. view (laporan otomatis)
+## 🏍️ Data Motor
 
-view mempermudah pemanggilan data yang kompleks menjadi satu perintah sederhana.
-
-SQL
-
-```
--- membuat view untuk laporan harian
-create view laporan_harian_bengkel as
-select 
-    servis.tanggal_servis, 
-    pelanggan.nama_pelanggan, 
-    motor.plat_nomor, 
-    servis.keluhan, 
-    servis.biaya,
-    servis.status_pembayaran
-from servis
-join motor on servis.id_motor = motor.id_motor
-join pelanggan on motor.id_pelanggan = pelanggan.id_pelanggan;
-
--- cara memanggil laporan
-select * from laporan_harian_bengkel;
-
+```sql
+INSERT INTO motor (plat_nomor, merk, id_pelanggan) VALUES
+('b 1234 aaa', 'honda', 1),
+('d 5678 bbb', 'yamaha', 2),
+('l 9012 ccc', 'suzuki', 3),
+('n 3456 ddd', 'kawasaki', 4),
+('h 7890 eee', 'honda', 5),
+('bk 111 fff', 'yamaha', NULL);
 ```
 
-----------
+---
 
-### 💡 kesimpulan materi
+## 🔧 Data Servis
 
-1.  **ddl**: membuat kerangka rumah (database & tabel).
-    
-2.  **dml**: mengisi penghuni rumah (data pelanggan & motor).
-    
-3.  **join**: menghubungkan antar ruangan (relasi antar tabel).
-    
-4.  **view**: membuat jendela pantau (laporan praktis).
-    
-5.  **alias (optional)**: nama panggilan singkat (seperti `p.` untuk `pelanggan`) untuk mempercepat penulisan.
+```sql
+INSERT INTO servis (id_motor, tanggal_servis, keluhan, biaya) VALUES
+(1, '2026-02-01', 'ganti oli', 150000),
+(2, '2026-02-02', 'servis rem', 200000),
+(3, '2026-02-03', 'ganti ban', 450000),
+(4, '2026-02-04', 'turun mesin', 1500000),
+(5, '2026-02-05', 'servis rutin', 250000);
+```
+
+---
+
+## 💰 Update Status Pembayaran
+
+```sql
+UPDATE servis
+SET status_pembayaran = 'lunas'
+WHERE id_servis IN (1,2,3,5);
+```
+
+---
+
+# 🔎 4. Query & Join
+
+---
+
+## 🔗 INNER JOIN
+
+Menampilkan data servis lengkap dengan nama pelanggan.
+
+```sql
+SELECT p.nama_pelanggan, m.plat_nomor, s.keluhan, s.biaya
+FROM servis s
+INNER JOIN motor m ON s.id_motor = m.id_motor
+INNER JOIN pelanggan p ON m.id_pelanggan = p.id_pelanggan;
+```
+
+### 📊 Hasil
+
+| Nama Pelanggan | Plat Nomor | Keluhan      | Biaya   |
+| -------------- | ---------- | ------------ | ------- |
+| andi setiawan  | b 1234 aaa | ganti oli    | 150000  |
+| geraldy        | d 5678 bbb | servis rem   | 200000  |
+| novi           | l 9012 ccc | ganti ban    | 450000  |
+| dewi puspa     | n 3456 ddd | turun mesin  | 1500000 |
+| opang          | h 7890 eee | servis rutin | 250000  |
+
+---
+
+## ⬅️ LEFT JOIN
+
+Menampilkan semua pelanggan meskipun belum punya motor.
+
+```sql
+SELECT p.nama_pelanggan, m.plat_nomor
+FROM pelanggan p
+LEFT JOIN motor m ON p.id_pelanggan = m.id_pelanggan;
+```
+
+---
+
+## ➡️ RIGHT JOIN
+
+Menampilkan semua motor meskipun belum punya pemilik.
+
+```sql
+SELECT p.nama_pelanggan, m.plat_nomor
+FROM pelanggan p
+RIGHT JOIN motor m ON p.id_pelanggan = m.id_pelanggan;
+```
+
+---
+
+## 🔄 FULL OUTER JOIN (Simulasi)
+
+MySQL tidak mendukung FULL JOIN langsung, jadi gunakan UNION:
+
+```sql
+SELECT p.nama_pelanggan, m.plat_nomor
+FROM pelanggan p
+LEFT JOIN motor m ON p.id_pelanggan = m.id_pelanggan
+UNION
+SELECT p.nama_pelanggan, m.plat_nomor
+FROM pelanggan p
+RIGHT JOIN motor m ON p.id_pelanggan = m.id_pelanggan;
+```
+
+---
+
+# 📊 5. Query Tambahan
+
+---
+
+## 🔢 Menghitung Jumlah Motor Honda
+
+```sql
+SELECT COUNT(*) AS total_honda
+FROM motor
+WHERE merk = 'honda';
+```
+
+---
+
+## 🔎 Filter + ORDER + LIMIT
+
+```sql
+SELECT *
+FROM servis
+WHERE keluhan = 'ganti oli' OR biaya > 1000000
+ORDER BY biaya DESC
+LIMIT 2;
+```
+
+---
+
+# 📈 6. VIEW (Virtual Table)
+
+## 📊 Membuat View Laporan Pendapatan
+
+```sql
+CREATE VIEW laporan_pendapatan AS
+SELECT
+    tanggal_servis,
+    keluhan,
+    biaya,
+    status_pembayaran
+FROM servis;
+```
+
+### 🔎 Mengakses View
+
+```sql
+SELECT * FROM laporan_pendapatan;
+```
+
+📌 View mempermudah pembuatan laporan tanpa menulis ulang query kompleks.
+
+---
+
+# 🧠 Konsep Relasi Database
+
+| Relasi            | Penjelasan                                  |
+| ----------------- | ------------------------------------------- |
+| Pelanggan → Motor | 1 pelanggan bisa punya banyak motor         |
+| Motor → Servis    | 1 motor bisa memiliki banyak riwayat servis |
+| Foreign Key       | Menjaga integritas data antar tabel         |
+
+---
+
+# 🎯 Kesimpulan
+
+✅ Menggunakan PRIMARY KEY & FOREIGN KEY
+✅ Menggunakan JOIN untuk relasi data
+✅ Menggunakan VIEW untuk laporan
+✅ Menggunakan DEFAULT VALUE
+✅ Menggunakan UNION untuk simulasi FULL JOIN
+
+---
+
+# 🚀 Status Proyek
+
+Database bengkel motor berhasil dibuat dengan:
+
+* Struktur relasional yang benar
+* Integritas data terjaga
+* Query analisis berjalan dengan baik
+* Siap dikembangkan ke aplikasi berbasis web (PHP / Laravel / Node.js)
+
+---
+
+Kalau kamu mau, saya bisa tambahkan:
+
+* ERD Diagram
+* Trigger otomatis ubah status pembayaran
+* Stored Procedure laporan bulanan
+* Versi lebih profesional untuk portfolio GitHub
+
+Tinggal bilang 🔥
